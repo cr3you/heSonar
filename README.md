@@ -36,9 +36,7 @@ But for now I provide this simple setup.
 ### 3. Download and setup the dashboard [description here](./dashboard/README.md)
 The dashboard is a single html file that can be run on your PC browser or your mobile phone (more handy in the field).
 
-There is an issue that only one dashboard can be run at once (I think the MQTT client ID is not random, I have to fix that).
-
-The dashboard also shows the last entry as an empty name with NaN values of SNR and RSSI (this is not a real hotspot, just an error). This is also an issue I have to fix. 
+The dashboard also shows the last entry as an empty name with NaN values of SNR and RSSI (this is not a real hotspot, just an error). This is an issue I have to fix.
 
 ## How it works?
 
