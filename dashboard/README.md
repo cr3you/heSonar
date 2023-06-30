@@ -3,7 +3,8 @@
    
 2. Edit the file, find this section anf replace it with your device ID from helium console
 
-   ![image](https://github.com/cr3you/heSonar/assets/73391409/71afab00-6179-47fc-be30-8b58a7e96d6f)
+  ![image](https://github.com/cr3you/heSonar/assets/73391409/8cebc0ac-0c55-46b7-b388-d94c6efeab81)
+
 
 
 3. Save the file and open it in browser.
