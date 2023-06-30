@@ -8,20 +8,25 @@ Each transmission is 1 DC as I recall (so if your device is detected by 20 hotsp
    
 ### 1. Create new device.
 Go to Devices and click "Add New Device"   
-![image](https://github.com/cr3you/heSonar/assets/73391409/16d2eaae-1263-4b6f-83a8-58970d999c4b)
+
+![image](https://github.com/cr3you/heSonar/assets/73391409/4ae888fa-ed84-48ae-9193-df330851d993)
+
 
 Give it some name (doesn't have to 'heSonar'), do not change the "Dev EUI/App EUI/App Key" fields, and click "Save Device"
    
-![image](https://github.com/cr3you/heSonar/assets/73391409/64559e1f-2101-4971-bda0-f6456a7d05a4)
+![image](https://github.com/cr3you/heSonar/assets/73391409/f7062c5d-f7ce-495a-816a-6a2201fce79b)
+
 
 ### 2. Create Packet plan
 Go to "Packets" and click Add New Packet Config
    
-![image](https://github.com/cr3you/heSonar/assets/73391409/bd1f4b73-5ad7-4c0f-9d75-fe92c59f6947)
+![image](https://github.com/cr3you/heSonar/assets/73391409/a8dd9adb-0d4d-4f01-b462-83d4b71a191e)
+
 
 Give packet config some name (here "MaxPackets"), choose Multiple Packets and move the slide rall to the right. Click "Create Packet Config".
 
-![image](https://github.com/cr3you/heSonar/assets/73391409/fe47845d-a00a-40c4-bfde-8ccabfc5b49e)
+![image](https://github.com/cr3you/heSonar/assets/73391409/ebf143ca-b874-4924-8404-0c861bec4016)
+
 
 ### 3. Create decoder function
 Now we need to create some function, goto "Functions" and create one "Add New Function"
