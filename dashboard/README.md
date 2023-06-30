@@ -12,4 +12,5 @@ You can also download it to your mobile phone and run the file from "downloads" 
 After device transmits a beacon you should see list of hotspots which received it sorted by SNR from best to worst.
 Helium console had a limit of max 21 devices reported thus way. I am not sure if the limit is still present.
 
-![image](https://github.com/cr3you/heSonar/assets/73391409/18afebe6-9af1-4545-95f0-c1a796a5cac3)
+![image](https://github.com/cr3you/heSonar/assets/73391409/b0a34af8-98d2-4653-b9bc-6cf95ae8e818)
+
