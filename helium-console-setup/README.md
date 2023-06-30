@@ -115,7 +115,8 @@ We're almost done.
 
 Now in the Flows click on your device, on the right choose "Packets" tab and turn on packet we created earlier
 
-![image](https://github.com/cr3you/heSonar/assets/73391409/090aace9-92c0-4f71-9964-52e5bfcd80cc)
+![image](https://github.com/cr3you/heSonar/assets/73391409/6b3c0d7d-e378-480b-876f-857741c12a4e)
+
 
 
 
