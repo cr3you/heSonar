@@ -54,7 +54,7 @@
             hostname: "test.mosquitto.org",
             port: "8081", //The port number is the WebSocket-Port,
                           // not (!) the MQTT-Port. This is a Paho characteristic.
-            clientId: "ClientId_" + toString(Math.random())
+            clientId: "ClientId_" + Math.random().toString()
         }
         let connectOptions = {
             userName: "",
