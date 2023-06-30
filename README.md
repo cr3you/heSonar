@@ -8,7 +8,8 @@ As a result you will see "all" hotspots which received your device's transmision
 For description how it works check the section below (to be added).
 
 
-![250070937-18afebe6-9af1-4545-95f0-c1a796a5cac3](https://github.com/cr3you/heSonar/assets/73391409/1d13c011-044a-40fe-b40c-95294223c178)
+![image](https://github.com/cr3you/heSonar/assets/73391409/48e72048-17f2-4fcc-ae87-2428adbe3185)
+
 
 
 ## Setup and configuration procedure
