@@ -26,11 +26,13 @@ Give packet config some name (here "MaxPackets"), choose Multiple Packets and mo
 ### 3. Create decoder function
 Now we need to create some function, goto "Functions" and create one "Add New Function"
     
-![image](https://github.com/cr3you/heSonar/assets/73391409/d63664d5-cd30-4584-a85f-14417a3f00c4)
+![image](https://github.com/cr3you/heSonar/assets/73391409/ec54583f-1a7c-4e94-ac83-94c14c36ed5e)
+
 
 Choose "Custom" decoder
 
-![image](https://github.com/cr3you/heSonar/assets/73391409/fa17a726-a041-433c-8d1d-32be4dcbd693)
+![image](https://github.com/cr3you/heSonar/assets/73391409/4b445b3c-75ad-4dab-b215-07f53f214c28)
+
 
 Give it some name ("heSonar_decoder" in this example) and post the code below and click "Save Function"
 
@@ -59,16 +61,19 @@ function Decoder(bytes, port, uplink_info) {
 [The code is also here: function_Decoder.js](./function_Decoder.js)
 
 
-![image](https://github.com/cr3you/heSonar/assets/73391409/8115e056-812e-4c09-8c08-b077711eaef5)
+![image](https://github.com/cr3you/heSonar/assets/73391409/febffd1e-f22b-4dea-8db3-a326379c8eaa)
+
 
 ### 4. Create integration
 Go to "Integrations" and "Add New Integration"
    
-![image](https://github.com/cr3you/heSonar/assets/73391409/618db1d6-0f2a-419b-9ba1-d3bcd7d212ff)
+![image](https://github.com/cr3you/heSonar/assets/73391409/4e8f6105-6573-4b06-86ab-9d23c86c00c6)
+
 
 Choose MQTT
 
-![image](https://github.com/cr3you/heSonar/assets/73391409/7b29c38a-fcfe-4daf-8f98-1183cb20c9be)
+![image](https://github.com/cr3you/heSonar/assets/73391409/b88d95ff-bc19-4d49-8848-e6a6001c80a7)
+
 
 And fill the integration parameters:
 ```
@@ -78,14 +83,16 @@ Downlink Topic: helium/{{device_id}}/tx
 Name: MQTT_mosquitto.org
 ```
 
-![image](https://github.com/cr3you/heSonar/assets/73391409/e35e7aed-28d4-4700-aff9-57bfd0a6a05d)
+![image](https://github.com/cr3you/heSonar/assets/73391409/8dad91e2-b753-4c7d-8bfa-5a4a4cb22b06)
+
 
 And click "Add integration"
 
 Now the integration parameters are shown, you chave to change one more thing
 Go to the "ADVANCED - JSON MESSAGE TEMPLATE (OPTIONAL)" at the bottom and click "Show Details"
 
-![image](https://github.com/cr3you/heSonar/assets/73391409/b9062e32-bd35-43c4-8d20-38ae10af2a65)
+![image](https://github.com/cr3you/heSonar/assets/73391409/34e748d6-299a-4cc0-84e3-9bffef13ee7b)
+
 
 
 
@@ -102,14 +109,16 @@ Go to the TEMPLATE BODY section and post code from the link below and click "Sav
 [MQTT_integration_template.json](./MQTT_integration_template.json)
 
 
-![image](https://github.com/cr3you/heSonar/assets/73391409/a2c804cc-acaf-4e0f-88ee-4bd016b93bbd)
+![image](https://github.com/cr3you/heSonar/assets/73391409/98251f21-a7dd-4342-9150-60ed86fff4a8)
+
 
 Now we have all the things we need \o/
 
 ### 5. Create Flow
 Go to "Flows" and from "NODES" drag all element to flow and connect them like on the picture
 
-![image](https://github.com/cr3you/heSonar/assets/73391409/3e989018-ac48-485c-af44-11a4eb7e309b)
+![image](https://github.com/cr3you/heSonar/assets/73391409/c0433ed5-a226-4739-b936-ded7530f82e3)
+
 
 We're almost done.
 
