@@ -1,0 +1,5 @@
+{
+  "id": "{{id}}",
+  "reported_at": "{{reported_at}}",
+  "hotspots": "{{decoded.payload}}"
+}
