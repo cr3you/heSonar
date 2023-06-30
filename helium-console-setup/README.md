@@ -102,6 +102,7 @@ Go to the "ADVANCED - JSON MESSAGE TEMPLATE (OPTIONAL)" at the bottom and click 
 
 
 Go to the TEMPLATE BODY section and post code from the link below and click "Save".
+
 **WARNING, helium console likes to forget this step, after you save the template leave integration section, go back and check if the template is saved, if not edit it again.**
 
 
