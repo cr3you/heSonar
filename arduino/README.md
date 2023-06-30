@@ -8,7 +8,8 @@
    
 Click on the expand icons and eye icon near the "Device EUI", "App EUI" ans "App Key" fields to expand the values to ready to paste code
 
-![image](https://github.com/cr3you/heSonar/assets/73391409/202f21ef-04d5-4c0f-a180-87c6cc00fdac)
+![image](https://github.com/cr3you/heSonar/assets/73391409/cc85e047-a168-4d8c-b768-1f05c6843212)
+
 
 Copy and paste the parameters to your Arduino code, replace corresponding values
 ```
