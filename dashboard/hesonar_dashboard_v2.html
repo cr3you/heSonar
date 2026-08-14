@@ -1,0 +1,566 @@
+<!-- 
+    * HeSonar <https://github.com/cr3you/heSonar>
+    * 
+    * Copyright (c) 2026, Crey's Labs.
+    * Released under the MIT License.
+
+    * Visualise Helium hotspots reception of Ping signal sent by a heSonar device
+    * Used for localising hotspots based on the received SNR and RSSI signal
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.min.js"
+        type="text/javascript"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <title>HeSonar by Crey</title>
+
+    <style>
+        body {
+            background-color: rgb(0, 98, 110);
+        }
+
+        h1 {
+            color: rgb(224, 249, 253);
+        }
+
+        h4 {
+            color: rgb(224, 249, 253);
+        }
+
+        h5 {
+            color: rgb(224, 249, 253);
+        }
+    </style>
+
+    <style>
+        .vl {
+            border-left: 2px solid rgb(0, 0, 0);
+            height: 60px;
+            position: absolute;
+            left: 50%;
+            margin-left: -1px;
+            top: 200;
+        }
+    </style>
+
+
+    <script>
+        let pahoConfig = {
+            hostname: "test.mosquitto.org",
+            port: "8081", //The port number is the WebSocket-Port,
+            // not (!) the MQTT-Port. This is a Paho characteristic.
+            clientId: "ClientId_" + Math.random().toString()
+        }
+        let connectOptions = {
+            userName: "",
+            password: "",
+            useSSL: true,
+            reconnect: true,
+            onSuccess: onConnect
+        }
+
+
+        let reconnecting = false;
+        // Function to build and establish connection with current variables
+        function reconnectMqtt() {
+
+            updateMqttStatus(false);
+
+            // 1. Prevent disconnect-connect loop
+            if (typeof client !== 'undefined') {
+                client.onConnectionLost = function () { };
+                client.onMessageArrived = function () { };
+
+                if (client.isConnected()) {
+                    console.log("Disconnecting old client cleanly...");
+                    client.disconnect();
+                }
+            }
+
+            // 2. Abort if host/port is missing
+            if (!mqttHost || !mqttPort) {
+                console.warn("MQTT connection aborted: Host or Port is missing.");
+                return;
+            }
+
+            // 3. Build pahoConfig based on saved settings
+            let pahoConfig = {
+                hostname: mqttHost,
+                port: Number(mqttPort)
+            };
+
+            // 4. Initialize client (randomized clientId to avoid conflicts)
+            const clientId = "heSonarWeb_" + Math.random().toString(16).substr(2, 8);
+            client = new Paho.Client(pahoConfig.hostname, pahoConfig.port, clientId);
+
+            // Assign your callbacks for the NEW client
+            client.onConnectionLost = onConnectionLost;
+            client.onMessageArrived = onMessageArrived;
+
+            // 5. Build connectOptions
+            let connectOptions = {
+                useSSL: mqttSsl,
+                timeout: 3,
+                onSuccess: onConnect,
+                onFailure: function (message) {
+                    console.error("Connection failed: " + message.errorMessage);
+                    updateMqttStatus(false);
+                    // Automatyczna próba ponownego połączenia przy błędzie
+                    setTimeout(reconnectMqtt, 5000);
+                }
+            };
+
+            // 6. Add User and Password ONLY if they are not empty strings
+            if (mqttUser !== "") {
+                connectOptions.userName = mqttUser;
+            }
+            if (mqttPass !== "") {
+                connectOptions.password = mqttPass;
+            }
+
+            // 7. Attempt connection
+            console.log("Connecting to broker...", pahoConfig);
+            client.connect(connectOptions);
+        }
+
+        function onConnect() {
+            console.log("Connected with Server");
+            client.subscribe("helium/" + deviceID + "/sonarPing");
+            console.log("subscribe to : " + "helium/" + deviceID + "/sonarPing");
+            updateMqttStatus(true);
+        }
+
+        function onConnectionLost(responseObject) {
+            console.log("connection lost :(");
+            if (responseObject.errorCode !== 0) {
+                console.log("onConnectionLost:" + responseObject.errorMessage);
+            }
+            else console.log("onConnectionLost1:" + responseObject.errorMessage);
+            updateMqttStatus(false);
+            reconnectMqtt();
+        }
+
+        function onMessageArrived(message) {
+            console.log("onMessageArrived:" + message.payloadString);
+            parseMQTT(message.payloadString);
+        }
+
+
+        var hotspots = [];
+
+        function parseMQTT(message) {
+
+            hotspots = [];
+            document.getElementById('payloadRAW').value = message;
+
+
+            var msg = JSON.parse(message);
+
+            document.getElementById('hotspotsRAW').value = msg.hotspots;
+
+            var temp_s = msg.hotspots;
+            var temp = temp_s.split(';').filter(Boolean);; // split for each hotspots + filter out empty elements
+            //console.log("text split into: " + temp.length);
+
+
+
+            temp.forEach(function (value, i) {
+                //console.log('%d: %s', i, value);
+                var temp2 = value.split(','); // get hotspot fields
+                hotspots.push({
+                    "name": temp2[0],
+                    "rssi": parseFloat(temp2[1]).toFixed(1),
+                    "snr": parseFloat(temp2[2]).toFixed(1)
+                });
+            });
+
+            // console.log("hotspots [] size: " + hotspots.length);
+
+            // console.log("------------------\n" + JSON.stringify(hotspots) + "\n-------------------------------");
+            // hotspots.forEach(function (value, i) {
+            //     console.log('%s : %s : %s', value.name, value.rssi, value.snr);
+            // });
+
+            //sort by SNR
+            hotspots.sort((a, b) => parseFloat(b.snr) - parseFloat(a.snr));
+            // console.log("------------------\n" + JSON.stringify(hotspots) + "\n-------------------------------");
+            // hotspots.forEach(function (value, i) {
+            //     console.log('%s : %s : %s', value.name, value.rssi, value.snr);
+            // });
+
+            update_progress(hotspots[0].snr, hotspots[0].rssi);
+            getScores();
+        }
+    </script>
+
+
+
+
+    <!-- ======================================== -->
+
+
+
+    <script>
+        // Global configuration variables
+        let mqttPreset = "";
+        let mqttHost = "";
+        let mqttPort = "";
+        let mqttSsl = false;
+        let mqttUser = "";
+        let mqttPass = "";
+        let deviceID = "";
+
+        // Broker presets definition (WebSockets ports)
+        const brokerPresets = {
+            mosquitto_ws: {host: "test.mosquitto.org", port: "8080", ssl: false},
+            mosquitto_wss: {host: "test.mosquitto.org", port: "8081", ssl: true},
+            emqx_ws: {host: "broker.emqx.io", port: "8083", ssl: false},
+            emqx_wss: {host: "broker.emqx.io", port: "8084", ssl: true},
+            hivemq_ws: {host: "broker.hivemq.com", port: "8000", ssl: false}
+        };
+
+        // Toggles the settings modal visibility
+        function toggleSettings() {
+            const modal = document.getElementById('settings-modal');
+            if (modal.style.display === 'none' || modal.style.display === '') {
+                // Load current data into the form
+                document.getElementById('input-preset').value = mqttPreset || "mosquitto_ws";
+                document.getElementById('input-host').value = mqttHost;
+                document.getElementById('input-port').value = mqttPort;
+                document.getElementById('input-ssl').checked = mqttSsl;
+                document.getElementById('input-user').value = mqttUser;
+                document.getElementById('input-pass').value = mqttPass;
+                document.getElementById('input-device').value = deviceID;
+
+                // Apply lock/unlock logic based on current preset
+                applyPreset(false);
+
+                modal.style.display = 'flex';
+            } else {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Applies the selected preset to the input fields
+        function applyPreset(overwriteFields = true) {
+            const presetSelect = document.getElementById('input-preset').value;
+            const hostInput = document.getElementById('input-host');
+            const portInput = document.getElementById('input-port');
+            const sslInput = document.getElementById('input-ssl');
+
+            if (presetSelect !== "custom") {
+                // Lock fields and auto-fill if a preset is selected
+                hostInput.readOnly = true;
+                portInput.readOnly = true;
+                sslInput.disabled = true;
+
+                if (overwriteFields && brokerPresets[presetSelect]) {
+                    hostInput.value = brokerPresets[presetSelect].host;
+                    portInput.value = brokerPresets[presetSelect].port;
+                    sslInput.checked = brokerPresets[presetSelect].ssl;
+                }
+            } else {
+                // Unlock fields for custom configuration
+                hostInput.readOnly = false;
+                portInput.readOnly = false;
+                sslInput.disabled = false;
+            }
+        }
+
+        // Saves settings to localStorage and triggers reconnection
+        function saveSettings() {
+            localStorage.setItem('heSonar_preset', document.getElementById('input-preset').value);
+            localStorage.setItem('heSonar_host', document.getElementById('input-host').value.trim());
+            localStorage.setItem('heSonar_port', document.getElementById('input-port').value.trim());
+            localStorage.setItem('heSonar_ssl', document.getElementById('input-ssl').checked);
+            localStorage.setItem('heSonar_user', document.getElementById('input-user').value.trim());
+            localStorage.setItem('heSonar_pass', document.getElementById('input-pass').value.trim());
+            localStorage.setItem('heSonar_deviceID', document.getElementById('input-device').value.trim());
+
+            loadSettings();
+            toggleSettings();
+
+            // Call the connection restart function
+            reconnectMqtt();
+        }
+
+        // Loads settings from localStorage and updates UI indicators
+        function loadSettings() {
+            mqttPreset = localStorage.getItem('heSonar_preset') || "mosquitto_wss";
+            mqttHost = localStorage.getItem('heSonar_host') || "test.mosquitto.org";
+            mqttPort = localStorage.getItem('heSonar_port') || "8081";
+            mqttSsl = localStorage.getItem('heSonar_ssl') === 'true';
+            mqttUser = localStorage.getItem('heSonar_user') || "";
+            mqttPass = localStorage.getItem('heSonar_pass') || "";
+            deviceID = localStorage.getItem('heSonar_deviceID') || "";
+
+            const statusBroker = document.getElementById('status-broker');
+            const statusDevice = document.getElementById('status-device');
+
+            if (mqttHost && mqttPort) {
+                statusBroker.innerHTML = `🟢 ${mqttHost}:${mqttPort}`;
+                statusBroker.style.background = "#28a745";
+            } else {
+                statusBroker.innerHTML = "🔴 No Broker";
+                statusBroker.style.background = "#dc3545";
+            }
+
+            if (deviceID) {
+                statusDevice.innerHTML = "🟢 Device ID OK";
+                statusDevice.style.background = "#28a745";
+            } else {
+                statusDevice.innerHTML = "🔴 No Device ID";
+                statusDevice.style.background = "#dc3545";
+            }
+        }
+
+        // Helper function to update the connection status indicator
+        function updateMqttStatus(isConnected) {
+            const statusMqtt = document.getElementById('status-mqtt');
+            if (isConnected) {
+                statusMqtt.innerHTML = "🟢 MQTT Connected";
+                statusMqtt.style.background = "#28a745";
+            } else {
+                statusMqtt.innerHTML = "🔴 MQTT Disconnected";
+                statusMqtt.style.background = "#dc3545";
+            }
+        }
+
+        window.onload = function () {
+            loadSettings();
+            // Initial connection trigger
+            if (mqttHost && mqttPort) {
+                reconnectMqtt();
+            }
+        };
+    </script>
+
+    <!-- ======================================== -->
+
+</head>
+
+
+<body>
+
+    <div id="status-bar"
+        style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px; background: #333; color: white;">
+        <button onclick="toggleSettings()"
+            style="padding: 8px 12px; cursor: pointer; border-radius: 5px; border: none; background: #007bff; color: white;">⚙️
+            Settings</button>
+        <span id="status-mqtt" style="padding: 5px 10px; border-radius: 15px; background: #dc3545; font-size: 14px;">🔴
+            MQTT Disconnected</span>
+        <span id="status-broker"
+            style="padding: 5px 10px; border-radius: 15px; background: #dc3545; font-size: 14px;">🔴 No Broker</span>
+        <span id="status-device"
+            style="padding: 5px 10px; border-radius: 15px; background: #dc3545; font-size: 14px;">🔴 No Device ID</span>
+
+    </div>
+
+    <div id="settings-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
+        <div
+            style="background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; max-height: 90vh; overflow-y: auto; color: black; box-sizing: border-box;">
+            <h3 style="margin-top: 0;">heSonar Configuration</h3>
+
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Broker Preset:</label>
+            <select id="input-preset" onchange="applyPreset()"
+                style="width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box;">
+                <option value="mosquitto_ws">test.mosquitto.org (WS)</option>
+                <option value="mosquitto_wss">test.mosquitto.org (WSS)</option>
+                <option value="emqx_ws">broker.emqx.io (WS)</option>
+                <option value="emqx_wss">broker.emqx.io (WSS)</option>
+                <option value="hivemq_ws">broker.hivemq.com (WS)</option>
+                <option value="custom">Custom...</option>
+            </select>
+
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">MQTT Host:</label>
+            <input type="text" id="input-host"
+                style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;"
+                placeholder="e.g. test.mosquitto.org">
+
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Port:</label>
+            <input type="number" id="input-port"
+                style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;" placeholder="e.g. 8081">
+
+            <label style="display: flex; align-items: center; margin-bottom: 15px; font-weight: bold; cursor: pointer;">
+                <input type="checkbox" id="input-ssl" style="margin-right: 8px; width: 18px; height: 18px;">
+                Use SSL (WSS)
+            </label>
+
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Username (optional):</label>
+            <input type="text" id="input-user"
+                style="width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box;"
+                placeholder="Leave empty if none">
+
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Password (optional):</label>
+            <input type="password" id="input-pass"
+                style="width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box;"
+                placeholder="Leave empty if none">
+
+            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Device ID:</label>
+            <input type="text" id="input-device"
+                style="width: 100%; padding: 8px; margin-bottom: 20px; box-sizing: border-box;"
+                placeholder="Your device ID">
+
+            <div style="display: flex; justify-content: space-between;">
+                <button onclick="saveSettings()"
+                    style="padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; width: 48%;">Save
+                    & Connect</button>
+                <button onclick="toggleSettings()"
+                    style="padding: 10px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; width: 48%;">Close</button>
+            </div>
+
+            <label style="display: block; margin-bottom: 5px;">These settings are saved only in your browser's local storage. If you change browser or clear cache they will be lost.</label>
+
+
+        </div>
+    </div>
+
+    <!-- sonar table -->
+
+    <textarea id="payloadRAW" name="something" style="width:100%; display:none;">This text gets removed</textarea>
+    <textarea id="hotspotsRAW" name="something" style="width:100%; display:none;">This text gets removed</textarea>
+
+    <h1>Helium Sonar Ping response table</h1>
+    <h4>(send Ping from HeSonar to see hotspots)</h4>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-1">
+                <h4>SNR:</h4>
+            </div>
+            <div class="col-11">
+                <div class="progress" style="height: 30px;">
+                    <div id="progress_snr" class="progress-bar bg-warning progress-bar-striped" style="width:50%;">
+                        <span id="snr_text" class="fs-3">0dB</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-1">
+                <h4>RSSI:</h4>
+            </div>
+            <div class="col-11">
+                <div class="progress" style="height: 30px;">
+                    <div id="progress_rssi" class="progress-bar bg-danger progress-bar-striped" style="width:100%;">
+                        <span id="rssi_text" class="fs-3">0dB</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="scoreboard"></div>
+
+    <div class="text-center">
+        <h5>&copy;2026 Crey's Lab. <a href="https://github.com/cr3you/heSonar"> github/cr3you </a></h5>
+    </div>
+
+    <script>
+        // map rssi and snr to 0-100% progress bar
+        function map_progbar(value, type) {
+            const SNR_MAX = 20;
+            const SNR_MIN = -20;
+            const RSSI_MAX = 0;
+            const RSSI_MIN = -145;
+            const PRBAR_ZERO = 50; // middle of the bar, = 0dB
+            const PRBAR_MAX = 100;
+            const PRBAR_MIN = 0;
+
+            let bar = 0;
+
+            let min = SNR_MIN;
+            let max = SNR_MAX;
+            if (type == 'rssi') {
+                min = RSSI_MIN;
+                max = RSSI_MAX;
+            }
+
+            if (type == "snr") {
+                if (value > 0) bar = ((PRBAR_MAX - PRBAR_ZERO) * value / max) + PRBAR_ZERO;
+                else if (value < 0) bar = PRBAR_ZERO + ((PRBAR_ZERO - PRBAR_MIN) * value / max);
+                else bar = PRBAR_ZERO;
+            }
+            else { // rssi
+                bar = PRBAR_MAX - ((value * PRBAR_MAX) / RSSI_MIN);
+            }
+
+            //console.log("mapping: " + value);
+            //console.log(" to " + bar);
+            return bar;
+
+        }
+
+        // Progress bar update
+        function update_progress(snr, rssi) {
+            //console.log("PROGRESS UPDATE: " + snr + " / " + rssi);
+            $("#progress_snr").css('width', map_progbar(snr, "snr") + '%');
+            $('#snr_text').text(snr + "dB");
+            $("#progress_rssi").css('width', map_progbar(rssi, "rssi") + '%');
+            $('#rssi_text').text(rssi + "dB");
+        }
+
+        // create table
+        //---------------------------------------------------------------------------------------
+        const scoreDiv = document.querySelector("div.scoreboard")
+        let tableHeaders = ["#", "hotspot-name", "SNR [dB]", "RSSI [dB]"]
+
+        const createScoreboardTable = () => {
+            while (scoreDiv.firstChild) scoreDiv.removeChild(scoreDiv.firstChild)
+
+            let scoreboardTable = document.createElement('table')
+            scoreboardTable.className = 'table table-success table-striped fs-2'
+            let scoreboardTableHead = document.createElement('thead')
+            let scoreboardTableHeaderRow = document.createElement('tr')
+            tableHeaders.forEach(header => {
+                let scoreHeader = document.createElement('th')
+                scoreHeader.innerText = header
+                scoreboardTableHeaderRow.append(scoreHeader)
+            })
+            scoreboardTableHead.append(scoreboardTableHeaderRow)
+            scoreboardTable.append(scoreboardTableHead)
+            let scoreboardTableBody = document.createElement('tbody')
+            scoreboardTable.append(scoreboardTableBody)
+            scoreDiv.append(scoreboardTable)
+        }
+
+        const appendScores = (singleScore, singleScoreIndex) => {
+            const scoreboardTable = document.querySelector('tbody')
+            let scoreboardTableBodyRow = document.createElement('tr')
+            let scoreRanking = document.createElement('td')
+            scoreRanking.innerText = singleScoreIndex
+            let usernameData = document.createElement('td')
+            usernameData.innerText = singleScore.name
+            let scoreData = document.createElement('td')
+            scoreData.innerText = singleScore.snr
+            let timeData = document.createElement('td')
+            timeData.innerText = singleScore.rssi
+            scoreboardTableBodyRow.append(scoreRanking, usernameData, scoreData, timeData)
+            scoreboardTable.append(scoreboardTableBodyRow)
+        }
+
+        const getScores = () => {
+            createScoreboardTable()
+            for (const score of hotspots) {
+                let scoreIndex = hotspots.indexOf(score) + 1
+                appendScores(score, scoreIndex)
+            }
+        }
+        //---------------------------------------------------------------------------------------
+    </script>
+
+
+</body>
+
+</html>
