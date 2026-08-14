@@ -1,3 +1,13 @@
+## New v2 dashboard demo!
+No need to edit source files anymore!<br>
+Just go to: https://cr3you.github.io/HeSonar/  
+Set your broker and device ID in "Settings" and you're done \o/<br>
+Also added few presets for popular free MQTT brokers.<br>
+Warning: test.mosquitto.org has issues right now and practically does not work so I suggest to use other brokers.
+
+## Below is the old description for dashboard V1
+
+
 ### 1. Download the dashboard file from here:
    [hesonar_dashboard.html](./hesonar_dashboard.html)
    
